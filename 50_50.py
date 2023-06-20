@@ -5,17 +5,25 @@ import time
 
 
 class team:
-    def __init__(self,name,points,imagepath,color):
+    def __init__(self,name,points,imagepath,color,color_text):
         self.name = name
         self.point = points
         self.color = color
+        self.color_text = color_text
         self.image = Image.open(imagepath)
         # self.image = ImageTk.PhotoImage(pilim)
+
+def sort_dict(x):
+    return dict(sorted(x.items(), key=lambda item: item[1], reverse=True))
+
+def add_point(n):
+    print(n)
 
 class gui:
     def __init__(self,config_file):
         #INIT#
         self.teams = self.teams_from_json(config_file)
+        self.points = sort_dict(dict([(t.name,t.point) for t in self.teams.values()]))
 
         #GUI#
         self.master = tk.Tk()
@@ -40,11 +48,12 @@ class gui:
             self.count.rowconfigure(r,weight=1)
 
         self.bt_count = {}
-        for i,t in enumerate(self.teams):
+        func={}
+        for i,t in enumerate(self.teams.values()):
             w = int(((self.master.winfo_screenwidth()*3/4)/nb_col)-20)
-            h = int(((self.master.winfo_screenheight())/nb_row)-20) 
+            h = int(((self.master.winfo_screenheight())/nb_row)-20)-35 
             img_ = ImageTk.PhotoImage(self.im_resize(t.image,(w,h)))
-            self.bt_count[t.name] = tk.Button(self.count,text=t.name,image=img_,compound="center",bg="black",relief="flat")
+            self.bt_count[t.name] = tk.Button(self.count,text=f"{t.name} - {t.point}",image=img_,compound="top",bg="black",relief="flat",fg="#ffffff",font=("Arial",14),command=lambda nm=t.name: self.add_point(nm))
             self.bt_count[t.name].image = img_
             self.bt_count[t.name].grid(row=i//nb_col,column=i%nb_col,sticky='news',padx=10,pady=10)
         
@@ -62,35 +71,31 @@ class gui:
         self.rank_title = tk.Label(self.rank,text="Classement",fg="white",font=("Arial",50),bg="black")
         self.rank_title.grid(row=0,column=0,sticky='news')
         self.lb_rank={}
-        for i,t in enumerate(self.teams):
+        for i,t in enumerate(self.teams.values()):
             w = int(((self.master.winfo_screenwidth()*1/4)/1))
             h = int(((self.master.winfo_screenheight()*len(self.teams)/(len(self.teams)+2))/len(self.teams))-2)
-            print(w,h) 
-            img_ = ImageTk.PhotoImage(self.im_resize(t.image,(w,h)))
-            self.lb_rank[t.name] = tk.Label(self.rank,text=t.name,image=img_,bg="black",compound="center")
-            self.lb_rank[t.name].image = img_
+            # img_ = ImageTk.PhotoImage(self.im_resize(t.image,(w,h)))
+            self.lb_rank[t.name] = tk.Label(self.rank,text=t.name,bg=t.color,compound="center",fg=t.color_text)
+            # self.lb_rank[t.name].image = img_
             self.lb_rank[t.name].grid(row=i+1,column=0,sticky='news',pady=1)
+        self.refresh_rank()
 
         ############
-        # self.master.update_idletasks()
-        # for i,t in enumerate(self.teams):
-        #     img_ = ImageTk.PhotoImage(self.im_resize(t.image,(100,100)))
-        #     self.bt_count[t.name].configure(image=img_)
-        #     self.bt_count[t.name].image=img_
-        # self.master.update_idletasks()
-
-        # self.bt1 = tk.Button(self.count,text="cnt")
-        # self.bt1.grid(row=0,column=2,sticky="nwes",padx=10,pady=10)
-        # self.bt12 = tk.Button(self.count,text="cnt")
-        # self.bt12.grid(row=0,column=3,sticky="nwes")
-        # self.bt13 = tk.Button(self.count,text="cnt")
-        # self.bt13.grid(row=1,column=2,sticky="nwes")
-        
-        # self.bt2 = tk.Button(self.rank,text="rank")
-        # self.bt2.pack()
 
         self.master.mainloop()
 
+    def add_point(self,n):
+        self.teams[n].point += 1
+        self.bt_count[n].config(text=f"{n} - {self.teams[n].point}")
+        self.refresh_rank()
+
+    def refresh_rank(self):
+        self.points = sort_dict(dict([(t.name,t.point) for t in self.teams.values()]))
+        i=1
+        for k,(n,p) in enumerate(zip(self.points.keys(),self.points.values())):
+            self.lb_rank[n] = tk.Label(self.rank,text=f"{k+1} - {n} ({p} {'points' if p>1 else 'point'})",bg=self.teams[n].color,compound="center",fg=self.teams[n].color_text,font=("Arial",12))
+            self.lb_rank[n].grid(row=i,column=0,sticky='news',pady=1)
+            i+=1
         
 
     def teams_from_json(self,config):
@@ -98,10 +103,10 @@ class gui:
             dic_ = json.loads(f.read())
 
         dicteams = dic_["teams"]
-        teams = []
+        teams = {}
         for t in dicteams:
-            tx = team(t['name'],t['point'],t['image'],t['color'])
-            teams.append(tx)
+            tx = team(t['name'],t['point'],t['image'],t['color'],t["color_text"])
+            teams[t['name']] = tx
         return teams
     
     def im_resize(self,img,size):
