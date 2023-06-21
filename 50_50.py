@@ -26,12 +26,14 @@ class gui:
         self.teams = self.teams_from_json(config_file)
         self.points = sort_dict(dict([(t.name,t.point) for t in self.teams.values()]))
         self.delete_mode = False
+        self.windowed = False
 
         #GUI#
         self.master = tk.Tk()
         self.master.configure(background=BACKGROUND)
         self.master.state('zoomed')
         self.master.title("50/50")
+        self.master.attributes('-fullscreen', True)
 
         self.master.columnconfigure(0,weight=3)
         self.master.columnconfigure(1,weight=1)
@@ -41,11 +43,15 @@ class gui:
 
         self.menubar = tk.Menu(self.master,tearoff=0)
         self.filemenu = tk.Menu(self.menubar,tearoff=0)
-        # self.filemenu.add_command(label="start/stop loop",command=self.loop_manage,background="green" if MODE_BOUCLE else "red")
         self.filemenu.add_command(label="mode incrémentation",command=self.switch_to_incr_mode,background=self.filemenu.cget("background") if self.delete_mode else "green")
         self.filemenu.add_command(label="mode décrémentation",command=self.switch_to_delete_mode,background=self.filemenu.cget("background") if not self.delete_mode else "green")
         self.menubar.add_cascade(label="mode",menu=self.filemenu)
+        self.filemenu2 = tk.Menu(self.menubar,tearoff=0)
+        self.filemenu2.add_command(label="plein écran",command=self.switch_to_fullscreen,background=self.filemenu2.cget("background") if self.windowed else "green")
+        self.filemenu2.add_command(label="fenêtré",command=self.switch_to_wdw,background=self.filemenu2.cget("background") if not self.windowed else "green")
+        self.menubar.add_cascade(label="écran",menu=self.filemenu2)
         self.menubar.add_command(label="réinitialiser",command=self.reset)
+        self.menubar.add_command(label="sortir",command=self.master.destroy)
         self.master.config(menu=self.menubar)
 
         #############
@@ -109,6 +115,20 @@ class gui:
         self.delete_mode = True
         self.filemenu.entryconfigure("mode incrémentation", background=self.filemenu.cget("background") if self.delete_mode else "green")
         self.filemenu.entryconfigure("mode décrémentation", background=self.filemenu.cget("background") if not self.delete_mode else "green")
+
+    def switch_to_fullscreen(self):
+        if self.windowed:
+            self.master.attributes('-fullscreen', True)
+        self.windowed = False
+        self.filemenu2.entryconfigure("plein écran", background=self.filemenu2.cget("background") if self.windowed else "green")
+        self.filemenu2.entryconfigure("fenêtré", background=self.filemenu2.cget("background") if not self.windowed else "green")
+
+    def switch_to_wdw(self):
+        if not self.windowed:
+            self.master.attributes('-fullscreen', False)
+        self.windowed = True
+        self.filemenu2.entryconfigure("plein écran", background=self.filemenu2.cget("background") if self.windowed else "green")
+        self.filemenu2.entryconfigure("fenêtré", background=self.filemenu2.cget("background") if not self.windowed else "green")
 
     def add_point(self,n):
         if self.delete_mode:
