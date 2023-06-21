@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import json
 import time
 
+BACKGROUND = "#222222"
 
 class team:
     def __init__(self,name,points,imagepath,color,color_text):
@@ -24,10 +25,11 @@ class gui:
         #INIT#
         self.teams = self.teams_from_json(config_file)
         self.points = sort_dict(dict([(t.name,t.point) for t in self.teams.values()]))
+        self.delete_mode = False
 
         #GUI#
         self.master = tk.Tk()
-        self.master.configure(background="black")
+        self.master.configure(background=BACKGROUND)
         self.master.state('zoomed')
         self.master.title("50/50")
 
@@ -37,7 +39,18 @@ class gui:
 
         #############
 
-        self.count = tk.Frame(self.master,background='black')
+        self.menubar = tk.Menu(self.master,tearoff=0)
+        self.filemenu = tk.Menu(self.menubar,tearoff=0)
+        # self.filemenu.add_command(label="start/stop loop",command=self.loop_manage,background="green" if MODE_BOUCLE else "red")
+        self.filemenu.add_command(label="mode incrémentation",command=self.switch_to_incr_mode,background=self.filemenu.cget("background") if self.delete_mode else "green")
+        self.filemenu.add_command(label="mode décrémentation",command=self.switch_to_delete_mode,background=self.filemenu.cget("background") if not self.delete_mode else "green")
+        self.menubar.add_cascade(label="mode",menu=self.filemenu)
+        self.menubar.add_command(label="réinitialiser",command=self.reset)
+        self.master.config(menu=self.menubar)
+
+        #############
+
+        self.count = tk.Frame(self.master,background=BACKGROUND)
         self.count.grid(row=0,column=0,sticky="nwes")
 
         nb_col = 4
@@ -53,7 +66,10 @@ class gui:
             w = int(((self.master.winfo_screenwidth()*3/4)/nb_col)-20)
             h = int(((self.master.winfo_screenheight())/nb_row)-20)-35 
             img_ = ImageTk.PhotoImage(self.im_resize(t.image,(w,h)))
-            self.bt_count[t.name] = tk.Button(self.count,text=f"{t.name} - {t.point}",image=img_,compound="top",bg="black",relief="flat",fg="#ffffff",font=("Arial",14),command=lambda nm=t.name: self.add_point(nm))
+            self.bt_count[t.name] = tk.Button(self.count,text=f"{t.name} - {t.point}",
+                                              image=img_,compound="top",bg=BACKGROUND,relief="flat",fg="#ffffff",font=("Arial",14),
+                                              activebackground='black',activeforeground='white',
+                                              command=lambda nm=t.name: self.add_point(nm))
             self.bt_count[t.name].image = img_
             self.bt_count[t.name].grid(row=i//nb_col,column=i%nb_col,sticky='news',padx=10,pady=10)
         
@@ -61,14 +77,14 @@ class gui:
 
         ###########
 
-        self.rank = tk.Frame(self.master,background='black')
+        self.rank = tk.Frame(self.master,background=BACKGROUND)
         self.rank.grid(row=0,column=1,sticky="news",padx=10)
         
         self.rank.columnconfigure(0,weight=1)
         self.rank.rowconfigure(0,weight=2)
         for r in range(len(self.teams)):
             self.rank.rowconfigure(r+1,weight=1)
-        self.rank_title = tk.Label(self.rank,text="Classement",fg="white",font=("Arial",50),bg="black")
+        self.rank_title = tk.Label(self.rank,text="Classement",fg="white",font=("Arial",50),bg=BACKGROUND)
         self.rank_title.grid(row=0,column=0,sticky='news')
         self.lb_rank={}
         for i,t in enumerate(self.teams.values()):
@@ -84,9 +100,28 @@ class gui:
 
         self.master.mainloop()
 
+    def switch_to_incr_mode(self):
+        self.delete_mode = False
+        self.filemenu.entryconfigure("mode incrémentation", background=self.filemenu.cget("background") if self.delete_mode else "green")
+        self.filemenu.entryconfigure("mode décrémentation", background=self.filemenu.cget("background") if not self.delete_mode else "green")
+
+    def switch_to_delete_mode(self):
+        self.delete_mode = True
+        self.filemenu.entryconfigure("mode incrémentation", background=self.filemenu.cget("background") if self.delete_mode else "green")
+        self.filemenu.entryconfigure("mode décrémentation", background=self.filemenu.cget("background") if not self.delete_mode else "green")
+
     def add_point(self,n):
-        self.teams[n].point += 1
+        if self.delete_mode:
+            self.teams[n].point -= 1
+        else:
+            self.teams[n].point += 1
         self.bt_count[n].config(text=f"{n} - {self.teams[n].point}")
+        self.refresh_rank()
+
+    def reset(self):
+        for n in self.teams.keys():
+            self.teams[n].point = 0
+            self.bt_count[n].config(text=f"{n} - {self.teams[n].point}")
         self.refresh_rank()
 
     def refresh_rank(self):
