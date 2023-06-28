@@ -79,21 +79,23 @@
         "point":0,
         "image":"drap/australie.jpg",
         "color":"#3d08c6",
-    	"color_text":"#ffffff"},
-        {"name":"Mexique",
+    	"color_text":"#ffffff"},      
+        {"name":"Islande",
         "point":0,
-        "image":"drap/mexique.png",
-        "color":"#3a6c39",
-    	"color_text":"#ffffff"},
+        "image":"drap/islande.png",
+        "color":"#1351a4",
+    	"color_text":"#ffffff"}
+    ],
+    "Other":[
         {"name":"Bresil",
         "point":0,
         "image":"drap/bresil.png",
         "color":"#1ea11c",
     	"color_text":"#000000"},
-        {"name":"Islande",
+        {"name":"Mexique",
         "point":0,
-        "image":"drap/islande.png",
-        "color":"#1351a4",
+        "image":"drap/mexique.png",
+        "color":"#3a6c39",
     	"color_text":"#ffffff"}
     ]
 }

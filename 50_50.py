@@ -4,6 +4,7 @@ import json
 import time
 
 BACKGROUND = "#222222"
+COUNT_SORT = True
 
 class team:
     def __init__(self,name,points,imagepath,color,color_text):
@@ -59,25 +60,25 @@ class gui:
         self.count = tk.Frame(self.master,background=BACKGROUND)
         self.count.grid(row=0,column=0,sticky="nwes")
 
-        nb_col = 4
-        nb_row = len(self.teams)//nb_col + (1 if len(self.teams)%nb_col!=0 else 0)
-        for c in range(nb_col):
+        self.nb_col = 4
+        self.nb_row = len(self.teams)//self.nb_col + (1 if len(self.teams)%self.nb_col!=0 else 0)
+        for c in range(self.nb_col):
             self.count.columnconfigure(c,weight=1)
-        for r in range(nb_row):
+        for r in range(self.nb_row):
             self.count.rowconfigure(r,weight=1)
 
         self.bt_count = {}
         func={}
         for i,t in enumerate(self.teams.values()):
-            w = int(((self.master.winfo_screenwidth()*3/4)/nb_col)-20)
-            h = int(((self.master.winfo_screenheight())/nb_row)-20)-35 
+            w = int(((self.master.winfo_screenwidth()*3/4)/self.nb_col)-20)
+            h = int(((self.master.winfo_screenheight())/self.nb_row)-20)-35 
             img_ = ImageTk.PhotoImage(self.im_resize(t.image,(w,h)))
             self.bt_count[t.name] = tk.Button(self.count,text=f"{t.name} - {t.point}",
                                               image=img_,compound="top",bg=BACKGROUND,relief="flat",fg="#ffffff",font=("Arial",14),
                                               activebackground='black',activeforeground='white',
                                               command=lambda nm=t.name: self.add_point(nm))
             self.bt_count[t.name].image = img_
-            self.bt_count[t.name].grid(row=i//nb_col,column=i%nb_col,sticky='news',padx=10,pady=10)
+            self.bt_count[t.name].grid(row=i//self.nb_col,column=i%self.nb_col,sticky='news',padx=10,pady=10)
         
         
 
@@ -151,6 +152,10 @@ class gui:
             self.lb_rank[n] = tk.Label(self.rank,text=f"{k+1} - {n} ({p} {'points' if p>1 else 'point'})",bg=self.teams[n].color,compound="center",fg=self.teams[n].color_text,font=("Arial",12))
             self.lb_rank[n].grid(row=i,column=0,sticky='news',pady=1)
             i+=1
+
+            if COUNT_SORT:
+                self.bt_count[n].grid(row=k//self.nb_col,column=k%self.nb_col,sticky='news',padx=10,pady=10)
+
         
 
     def teams_from_json(self,config):
