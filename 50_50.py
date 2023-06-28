@@ -149,7 +149,7 @@ class gui:
         self.points = sort_dict(dict([(t.name,t.point) for t in self.teams.values()]))
         i=1
         for k,(n,p) in enumerate(zip(self.points.keys(),self.points.values())):
-            self.lb_rank[n] = tk.Label(self.rank,text=f"{k+1} - {n} ({p} {'points' if p>1 else 'point'})",bg=self.teams[n].color,compound="center",fg=self.teams[n].color_text,font=("Arial",12))
+            self.lb_rank[n] = tk.Label(self.rank,text=f"{k+1} - {n} ({p} {'points' if p>1 else 'point'})",bg=self.teams[n].color,compound="center",fg=self.teams[n].color_text,font=("Arial",24))
             self.lb_rank[n].grid(row=i,column=0,sticky='news',pady=1)
             i+=1
 
